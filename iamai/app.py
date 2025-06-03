@@ -123,11 +123,6 @@ if submitted:
             # Append bot message
             st.session_state.messages.append(("Bot", bot_reply))
 
-            # Guard rerun
-            if "safe_rerun" not in st.session_state:
-                st.session_state.safe_rerun = True
-                st.rerun()
-
         except Exception as e:
             st.error("Something went wrong while generating a response.")
             st.exception(e)
