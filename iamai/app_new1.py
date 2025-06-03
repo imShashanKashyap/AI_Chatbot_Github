@@ -1,10 +1,9 @@
 import streamlit as st
 import google.generativeai as genai
-import requests
+from inst import system_instruction
 from datetime import datetime
-from inst import system_instruction  # Contains your system role string
 
-# === SETUP ===
+# Secure credentials
 api_key = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=api_key)
 
@@ -13,10 +12,10 @@ model = genai.GenerativeModel(
     system_instruction=system_instruction
 )
 
-# === CONFIGURE PAGE ===
+# Page config
 st.set_page_config(page_title="Flexing Data AI Chatbot", layout="centered")
 
-# === STYLES ===
+# Custom CSS
 st.markdown("""
 <style>
 .chat-bubble {
@@ -54,53 +53,45 @@ st.markdown("""
 st.markdown("<h3 style='text-align: center; color: #FF5722;'>🤖 Flexing Data AI Chatbot</h3>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Ask anything about our Data Analytics Internship Program</p>", unsafe_allow_html=True)
 
-# === USER INFO FORM ===
+# Ask user info once
 if "user_info" not in st.session_state:
     with st.form("user_info_form"):
         name = st.text_input("Your Name")
         email = st.text_input("Email")
         whatsapp = st.text_input("WhatsApp Number")
         submit = st.form_submit_button("Start Chat")
-
         if submit:
             if name and email and whatsapp:
                 st.session_state.user_info = {
                     "name": name.strip(),
                     "email": email.strip(),
-                    "whatsapp": whatsapp.strip()
+                    "whatsapp": whatsapp.strip(),
                 }
+
+                # Save user info
+                with open("user_data.txt", "a", encoding="utf-8") as f:
+                    f.write("\n" + "=" * 50 + "\n")
+                    f.write(f"Name: {name}\nEmail: {email}\nWhatsApp: {whatsapp}\n")
+                    f.write(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write("Chat Transcript:\n")
             else:
                 st.warning("Please fill out all fields to start chatting.")
                 st.stop()
         else:
             st.stop()
 
-# === CHAT SESSION INIT ===
+# Init chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# === POST TO GOOGLE SHEET VIA APPS SCRIPT ===
-def send_to_google_apps_script(name, email, whatsapp, question, answer):
-    url = st.secrets["google_url"]  # Replace with your deployed Apps Script URL
-    payload = {
-        "name": name,
-        "email": email,
-        "whatsapp": whatsapp,
-        "question": question,
-        "answer": answer
-    }
-    try:
-        requests.post(url, json=payload, timeout=5)
-    except Exception as e:
-        st.error(f"⚠️ Failed to send data to Google Sheet: {e}")
-
-# === CHAT INPUT ===
+# Chat input
 user_input = st.chat_input("Type your message...")
 
 if user_input:
-    user = st.session_state.user_info
+    user_name = st.session_state.user_info["name"]
     st.session_state.messages.append(("You", user_input))
 
+    # Call Gemini
     with st.spinner("Thinking..."):
         try:
             response = model.generate_content(user_input)
@@ -111,10 +102,13 @@ if user_input:
 
     st.session_state.messages.append(("Bot", bot_reply))
 
-    # Send to Google Sheets
-    send_to_google_apps_script(user["name"], user["email"], user["whatsapp"], user_input, bot_reply)
+    # Append to file
+    with open("user_data.txt", "a", encoding="utf-8") as f:
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        f.write(f"[{timestamp}] {user_name} ➤ {user_input}\n")
+        f.write(f"[{timestamp}] Bot ➤ {bot_reply}\n")
 
-# === DISPLAY MESSAGES ===
+# Display messages
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 for sender, message in st.session_state.messages:
     bubble_class = "user-bubble" if sender == "You" else "bot-bubble"
