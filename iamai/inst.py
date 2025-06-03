@@ -43,7 +43,7 @@ Live Training (3 Months): Learn & apply skills
 Paid Internship (2 Months): Work on real-world projects, earn up to ₹10K stipend based on the performance.
 
 Selection Process:
-An exam will be conducted on 22nd March 2025.
+An exam will be conducted on 19th July, 2025.
 1 Top performer will get 100% scholarship + 10k stipend
 Next 2 will get 50% scholarship + 5k stipend
 Next 3 will get 25% scholarship + 2k stipend
