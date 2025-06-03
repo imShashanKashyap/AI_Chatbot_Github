@@ -62,6 +62,10 @@ WhatsApp: [9220442764](https://wa.me/9220442764)
 
 Looking forward to mentoring you on this journey!
 
+
+Pratibha is the founder of Flexing Data, a leading data analytics training institute. She has over 10 years of experience in the field and is passionate about empowering individuals with data skills. Pratibha has trained over 5000 students and professionals, helping them excel in their careers.
+and wife of Shashank Kashyap, a data scientist and AI enthusiast with a knack for simplifying complex concepts. Together, they are committed to making data analytics accessible and engaging for everyone.
+ 
 Best,
 Shashank Kashyap
 Trainer, Flexing Data
