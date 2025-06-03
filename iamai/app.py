@@ -1,17 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
-# from key import api_key
+from inst import system_instruction
 
-# Load from Streamlit Secrets
+# Load secure credentials from secrets
 api_key = st.secrets["GEMINI_API_KEY"]
 email = st.secrets["SMTP_EMAIL"]
 password = st.secrets["SMTP_PASSWORD"]
 
-from inst import system_instruction
-
-
-
-# Streamlit page setup
+# Page config
 st.set_page_config(page_title="Flexing Data AI Chatbot", layout="wide")
 st.title("🤖 Flexing Data's AI Chatbot")
 st.markdown("Ask me anything about **Flexing Data's Data Analytics Internship Program!**")
@@ -23,36 +19,45 @@ model = genai.GenerativeModel(
     system_instruction=system_instruction
 )
 
-# Initialize message history
+# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display message history
+# Display chat history
 for sender, message in st.session_state.messages:
-    if sender == "You":
-        st.markdown(f"🧑‍💼 **{sender}:** {message}")
-    else:
-        st.markdown(f"🤖 **{sender}:** {message}")
+    role_icon = "🧑‍💼" if sender == "You" else "🤖"
+    st.markdown(f"{role_icon} **{sender}:** {message}")
 
-# Chat input form (Enter-to-send enabled)
+# Chat form with enter-to-send
 with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("Your message:", placeholder="Type your question and press Enter...")
     submitted = st.form_submit_button("Send")
 
-if submitted and user_input.strip():
-    try:
-        # Append user input
-        st.session_state.messages.append(("You", user_input.strip()))
+# Process message
+if submitted:
+    user_input = user_input.strip()
+    
+    if not user_input:
+        st.warning("Please enter a message.")
+    elif len(user_input) > 1000:
+        st.warning("Your message is too long. Please shorten it.")
+    else:
+        try:
+            # Append user message
+            st.session_state.messages.append(("You", user_input))
 
-        # Generate response from Gemini
-        response = model.generate_content(user_input.strip())
-        bot_reply = response.text.strip()
+            # Generate Gemini response
+            with st.spinner("Thinking..."):
+                response = model.generate_content(user_input)
+                bot_reply = response.text.strip()
 
-        # Append bot reply
-        st.session_state.messages.append(("Bot", bot_reply))
+            st.session_state.messages.append(("Bot", bot_reply))
 
-        # Rerun to show updated chat
-        st.rerun()
+            # Guard rerun to avoid infinite redirect
+            if "safe_rerun" not in st.session_state:
+                st.session_state.safe_rerun = True
+                st.rerun()
 
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+        except Exception as e:
+            st.error("Something went wrong while generating a response.")
+            st.exception(e)
